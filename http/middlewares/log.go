@@ -15,17 +15,10 @@ func Log(handler http.Handler) http.Handler {
 
 func LogWithTiming(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-
-		defer func() {
-			end := time.Now()
-			duration := end.Sub(start)
-			if duration < time.Millisecond {
-				log.Printf("%s %s %s (%dμs)", r.RemoteAddr, r.Method, r.URL, duration/time.Microsecond)
-			} else {
-				log.Printf("%s %s %s (%dms)", r.RemoteAddr, r.Method, r.URL, duration/time.Millisecond)
-			}
-		}()
+		defer func(started time.Time) {
+			timing := time.Since(started).Nanoseconds() / 1000.0
+			log.Printf("%s: %s (%dus)\n", r.Method, r.RequestURI, timing)
+		}(time.Now())
 		handler.ServeHTTP(w, r)
 	})
 }
