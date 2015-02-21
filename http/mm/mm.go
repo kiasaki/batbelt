@@ -24,3 +24,7 @@ func (c Chain) Then(handler http.Handler) http.Handler {
 	}
 	return final
 }
+
+func (c Chain) ThenFunc(handlerFunc func(http.ResponseWriter, *http.Request)) http.Handler {
+	return c.Then(http.HandlerFunc(handlerFunc))
+}
