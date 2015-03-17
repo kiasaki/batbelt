@@ -44,7 +44,7 @@ func SetNotFoundResponse(res http.ResponseWriter) {
 }
 
 func SetInternalServerErrorResponse(res http.ResponseWriter, err error) {
-	log.Print(err)
+	log.Println(err)
 	JsonResponse(res)
 	res.WriteHeader(http.StatusInternalServerError)
 }

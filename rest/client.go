@@ -28,6 +28,16 @@ func MakeRequest(method string, url string, entity interface{}) (*http.Response,
 	return http.DefaultClient.Do(req)
 }
 
+func MakeRequestWithMiddleware(method string, url string, entity interface{}, mid func(*http.Request)) (*http.Response, error) {
+	req, err := buildRequest(method, url, entity)
+	if err != nil {
+		return nil, err
+	}
+	mid(req)
+
+	return http.DefaultClient.Do(req)
+}
+
 func buildRequest(method string, url string, entity interface{}) (*http.Request, error) {
 	body, err := encodeEntity(entity)
 	if err != nil {
@@ -63,6 +73,7 @@ func ProcessResponseBytes(r *http.Response, expectedStatus int) ([]byte, error) 
 	respBody, err := ioutil.ReadAll(r.Body)
 	return respBody, err
 }
+
 func ProcessResponseEntity(r *http.Response, entity interface{}, expectedStatus int) error {
 	if err := processResponse(r, expectedStatus); err != nil {
 		return err
@@ -79,6 +90,7 @@ func ProcessResponseEntity(r *http.Response, entity interface{}, expectedStatus 
 	}
 	return nil
 }
+
 func processResponse(r *http.Response, expectedStatus int) error {
 	if r.StatusCode != expectedStatus {
 
