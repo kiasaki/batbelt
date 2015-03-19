@@ -43,7 +43,7 @@ func SetNotFoundResponse(res http.ResponseWriter) {
 	res.WriteHeader(http.StatusNotFound)
 }
 
-func SetInternalServerErrorResponse(res http.ResponseWriter, err error) {
+func SetInternalServerErrorResponse(res http.ResponseWriter, err interface{}) {
 	log.Println(err)
 	JsonResponse(res)
 	res.WriteHeader(http.StatusInternalServerError)
@@ -76,10 +76,9 @@ func SetOKResponse(res http.ResponseWriter, entity interface{}) error {
 	return nil
 }
 
-func SetNoContentResponse(res http.ResponseWriter) error {
+func SetNoContentResponse(res http.ResponseWriter) {
 	JsonResponse(res)
 	res.WriteHeader(http.StatusNoContent)
-	return nil
 }
 
 func JsonResponse(res http.ResponseWriter) {
