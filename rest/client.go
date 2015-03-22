@@ -15,9 +15,12 @@ var (
 	ErrStatusBadRequest          error = errors.New(fmt.Sprintf("%d: Bad Request", http.StatusBadRequest))
 	ErrStatusInternalServerError error = errors.New(fmt.Sprintf("%d: Internal Server Error", http.StatusInternalServerError))
 	ErrStatusNotFound            error = errors.New(fmt.Sprintf("%d: Not Found", http.StatusNotFound))
+	ErrStatusUnauthorized        error = errors.New(fmt.Sprintf("%d: Unauthorized", http.StatusUnauthorized))
 )
 
-func MakeRequest(method string, url string, entity interface{}) (*http.Response, error) {
+var HttpClient = http.DefaultClient
+
+func MakeRequest(method, url string, entity interface{}) (*http.Response, error) {
 	req, err := buildRequest(method, url, entity)
 	if err != nil {
 		return nil, err
@@ -25,17 +28,17 @@ func MakeRequest(method string, url string, entity interface{}) (*http.Response,
 	return http.DefaultClient.Do(req)
 }
 
-func MakeRequestWithMiddleware(method string, url string, entity interface{}, mid func(*http.Request)) (*http.Response, error) {
+func MakeRequestWithMiddleware(method, url string, entity interface{}, mid func(*http.Request)) (*http.Response, error) {
 	req, err := buildRequest(method, url, entity)
 	if err != nil {
 		return nil, err
 	}
 	mid(req)
 
-	return http.DefaultClient.Do(req)
+	return HttpClient.Do(req)
 }
 
-func buildRequest(method string, url string, entity interface{}) (*http.Request, error) {
+func buildRequest(method, url string, entity interface{}) (*http.Request, error) {
 	body, err := encodeEntity(entity)
 	if err != nil {
 		return nil, err
@@ -96,6 +99,8 @@ func processResponse(r *http.Response, expectedStatus int) error {
 			return ErrStatusConflict
 		case http.StatusBadRequest:
 			return ErrStatusBadRequest
+		case http.StatusUnauthorized:
+			return ErrStatusUnauthorized
 		case http.StatusInternalServerError:
 			return ErrStatusInternalServerError
 		case http.StatusNotFound:

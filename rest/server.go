@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/braintree/manners"
 	"github.com/gorilla/mux"
@@ -40,7 +41,7 @@ func newLogger(name, version string) *log.Logger {
 }
 
 func NewServer(name, version string) Server {
-	return Server{
+	s := Server{
 		AppName:     name,
 		Version:     version,
 		Router:      newRouter(),
@@ -48,6 +49,8 @@ func NewServer(name, version string) Server {
 		Filters:     mm.New(),
 		Logger:      newLogger(name, version),
 	}
+	s.AddFilters(s.log)
+	return s
 }
 
 func (s *Server) AddFilters(m ...mm.Middleware) {
@@ -105,4 +108,14 @@ func (s *Server) Run() {
 
 	// Now servers know they need to shutdown just wait till they are done
 	wg.Wait()
+}
+
+func (s *Server) log(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func(started time.Time) {
+			timing := time.Since(started).Nanoseconds() / 1000.0
+			s.Logger.Printf("%s: %s (%dus)\n", r.Method, r.RequestURI, timing)
+		}(time.Now())
+		handler.ServeHTTP(w, r)
+	})
 }
