@@ -10,6 +10,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type J map[string]interface{}
+
 func PathString(req *http.Request, key string) string {
 	return mux.Vars(req)[key]
 }
@@ -24,16 +26,21 @@ func Bind(req *http.Request, entity interface{}) error {
 	return decoder.Decode(entity)
 }
 
+func SetUnauthorizedResponse(res http.ResponseWriter) {
+	JsonResponse(res)
+	res.WriteHeader(http.StatusUnauthorized)
+}
+
 func SetConflictResponse(res http.ResponseWriter) {
 	JsonResponse(res)
 	res.WriteHeader(http.StatusConflict)
-
 }
+
 func SetBadRequestResponse(res http.ResponseWriter) {
 	JsonResponse(res)
 	res.WriteHeader(http.StatusBadRequest)
-
 }
+
 func SetNotFoundResponse(res http.ResponseWriter) {
 	JsonResponse(res)
 	res.WriteHeader(http.StatusNotFound)
@@ -60,14 +67,18 @@ func SetCreatedResponse(res http.ResponseWriter, entity interface{}, location st
 }
 
 func SetOKResponse(res http.ResponseWriter, entity interface{}) error {
+	JsonResponse(res)
+	res.WriteHeader(http.StatusOK)
+	return WriteEntity(res, entity)
+}
+
+func WriteEntity(res http.ResponseWriter, entity interface{}) error {
 	b, err := json.Marshal(entity)
 	if err != nil {
 		return err
 	}
-	body := string(b[:])
 
-	JsonResponse(res)
-	res.WriteHeader(http.StatusOK)
+	body := string(b[:])
 	fmt.Fprint(res, body)
 	return nil
 }

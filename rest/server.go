@@ -19,7 +19,7 @@ type Server struct {
 	Version     string
 	Router      *mux.Router
 	AdminRouter *mux.Router
-	Filters     mm.Chain
+	Filters     *mm.Chain
 	Logger      *log.Logger
 }
 
@@ -40,12 +40,13 @@ func newLogger(name, version string) *log.Logger {
 }
 
 func NewServer(name, version string) Server {
+	chain := mm.New()
 	return Server{
 		AppName:     name,
 		Version:     version,
 		Router:      newRouter(),
 		AdminRouter: newRouter(),
-		Filters:     mm.New(),
+		Filters:     &chain,
 		Logger:      newLogger(name, version),
 	}
 }
