@@ -7,11 +7,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
-
-var _ = log.Print
 
 var (
 	ErrStatusConflict            error = errors.New(fmt.Sprintf("%d: Conflict", http.StatusConflict))

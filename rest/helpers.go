@@ -3,31 +3,27 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
-// Helpers
-func PathString(req *http.Request, key string) (string, error) {
-	return mux.Vars(req)[key], nil
+func PathString(req *http.Request, key string) string {
+	return mux.Vars(req)[key]
 }
 func PathInt(req *http.Request, key string) (int, error) {
-	str, err := PathString(req, key)
-	if err != nil {
-		return 0, err
-	}
+	str := PathString(req, key)
 	return strconv.Atoi(str)
-
 }
 
+// Unmarshals request's body into a given object
 func Bind(req *http.Request, entity interface{}) error {
 	decoder := json.NewDecoder(req.Body)
 	return decoder.Decode(entity)
 }
 
-// Response Factories
 func SetConflictResponse(res http.ResponseWriter) {
 	JsonResponse(res)
 	res.WriteHeader(http.StatusConflict)
