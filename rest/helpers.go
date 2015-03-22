@@ -81,6 +81,11 @@ func SetNoContentResponse(res http.ResponseWriter) {
 	res.WriteHeader(http.StatusNoContent)
 }
 
+func SetMethodNotAllowedResponse(res http.ResponseWriter) {
+	JsonResponse(res)
+	res.WriteHeader(http.StatusMethodNotAllowed)
+}
+
 func JsonResponse(res http.ResponseWriter) {
 	res.Header().Set("Content-Type", "application/json")
 }
