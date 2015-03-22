@@ -19,7 +19,7 @@ type Server struct {
 	Version     string
 	Router      *mux.Router
 	AdminRouter *mux.Router
-	Filters     *mm.Chain
+	Filters     mm.Chain
 	Logger      *log.Logger
 }
 
@@ -40,19 +40,18 @@ func newLogger(name, version string) *log.Logger {
 }
 
 func NewServer(name, version string) Server {
-	chain := mm.New()
 	return Server{
 		AppName:     name,
 		Version:     version,
 		Router:      newRouter(),
 		AdminRouter: newRouter(),
-		Filters:     &chain,
+		Filters:     mm.New(),
 		Logger:      newLogger(name, version),
 	}
 }
 
 func (s *Server) AddFilters(m ...mm.Middleware) {
-	s.Filters.Append(m...)
+	s.Filters = s.Filters.Append(m...)
 }
 
 // Register in the current server's router all methods handled by
