@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -13,27 +14,39 @@ import (
 	"github.com/kiasaki/batbelt/http/mm"
 )
 
-var logger *log.Logger
+type Server struct {
+	AppName     string
+	Version     string
+	Router      *mux.Router
+	AdminRouter *mux.Router
+	Filters     mm.Chain
+	Logger      *log.Logger
+}
 
-func init() {
-	logger = log.New(
+func newRouter() *mux.Router {
+	r := mux.NewRouter()
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		SetNotFoundResponse(w)
+	})
+	return r
+}
+
+func newLogger(name, version string) *log.Logger {
+	return log.New(
 		os.Stdout,
-		fmt.Sprintf("pid:%d ", syscall.Getpid()),
+		fmt.Sprintf("app=%s v=%s ", name, version),
 		log.Ldate|log.Lmicroseconds|log.Lshortfile,
 	)
 }
 
-type Server struct {
-	Router      *mux.Router
-	AdminRouter *mux.Router
-	Filters     mm.Chain
-}
-
-func NewServer() Server {
+func NewServer(name, version string) Server {
 	return Server{
-		Router:      mux.NewRouter(),
-		AdminRouter: mux.NewRouter(),
+		AppName:     name,
+		Version:     version,
+		Router:      newRouter(),
+		AdminRouter: newRouter(),
 		Filters:     mm.New(),
+		Logger:      newLogger(name, version),
 	}
 }
 
@@ -44,6 +57,9 @@ func (s *Server) AddFilters(m ...mm.Middleware) {
 // Register in the current server's router all methods handled by
 // given endpoint (implementing GET, POST, PUT, DELETE, HEAD)
 func (s *Server) Register(endpoint interface{}) {
+	if e, ok := endpoint.(GET); ok {
+		s.Logger.Printf("Registering [%T] at path [%s]\n", endpoint, e.Path())
+	}
 	RegisterEnpointToRouter(s.Router, endpoint)
 }
 
@@ -68,13 +84,13 @@ func (s *Server) Run() {
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
-		logger.Println("Web server listening on 0.0.0.0:" + getEnv("PORT", "8080"))
+		s.Logger.Println("Web server listening on 0.0.0.0:" + getEnv("PORT", "8080"))
 		webServer.ListenAndServe("0.0.0.0:"+getEnv("PORT", "8080"), s.Filters.Then(s.Router))
 	}()
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
-		logger.Println("Admin web server listening on 127.0.0.1:" + getEnv("ADMIN_PORT", "8081"))
+		s.Logger.Println("Admin web server listening on 127.0.0.1:" + getEnv("ADMIN_PORT", "8081"))
 		adminServer.ListenAndServe("127.0.0.1:"+getEnv("ADMIN_PORT", "8081"), s.AdminRouter)
 	}()
 
