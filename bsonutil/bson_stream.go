@@ -1,6 +1,7 @@
-package bson
+package bsonutil
 
 import (
+	"fmt"
 	"io"
 
 	"gopkg.in/mgo.v2/bson"
